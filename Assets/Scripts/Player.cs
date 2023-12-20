@@ -13,6 +13,9 @@ public class Player : MonoBehaviour
 
     private Vector2 pointerInput, movementInput;
 
+    public Animator animator;
+    public SpriteRenderer spriteRenderer;
+
     public Vector2 PointerInput => pointerInput;
 
     [SerializeField]
@@ -23,9 +26,14 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float currentSpeed = 0;
 
+    private WeaponParent weaponParent;
+
     private void Awake()
     {
         rb2d = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        weaponParent = GetComponentInChildren<WeaponParent>();
     }
     // Start is called before the first frame update
     void Start()
@@ -34,22 +42,57 @@ public class Player : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void FixedUpdate()
     {
         pointerInput = GetPointerInput();
+        weaponParent.PoiterPosition = pointerInput;
         movementInput = movement.action.ReadValue<Vector2>();
+        Debug.Log(pointerInput.x);
 
         if(movementInput.magnitude > 0 && currentSpeed >= 0)
         {
             oldMovementInput = movementInput;
             currentSpeed += acceleration * maxSpeed * Time.deltaTime;
+            animator.SetBool("isMoving", true);
+            if (movementInput.x > 0)
+            {
+                if (pointerInput.x < 0)
+                {
+                    spriteRenderer.flipX = true;
+                }
+                else
+                {
+                    spriteRenderer.flipX = false;
+                }
+            }
+            else
+            {
+                if (pointerInput.x < 0)
+                {
+                    spriteRenderer.flipX = true;
+                }
+                else
+                {
+                    spriteRenderer.flipX = false;
+                }
+            }
         }
         else
         {
             currentSpeed -= deacceleration * maxSpeed * Time.deltaTime;
+            animator.SetBool("isMoving", false);
+            if (pointerInput.x < 0)
+            {
+                spriteRenderer.flipX = true;
+            }
+            else
+            {
+                spriteRenderer.flipX = false;
+            }
         }
         currentSpeed = Mathf.Clamp(currentSpeed, 0, maxSpeed);
         rb2d.velocity = oldMovementInput * currentSpeed;
+
     }
 
     private Vector2 GetPointerInput()
